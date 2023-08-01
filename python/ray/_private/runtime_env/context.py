@@ -26,6 +26,7 @@ class RuntimeEnvContext:
         resources_dir: Optional[str] = None,
         override_worker_entrypoint: Optional[str] = None,
         java_jars: List[str] = None,
+        julia_command: List[str] = None,
     ):
         self.command_prefix = command_prefix or []
         self.env_vars = env_vars or {}
@@ -37,6 +38,7 @@ class RuntimeEnvContext:
         self.resources_dir: str = resources_dir
         self.override_worker_entrypoint: Optional[str] = override_worker_entrypoint
         self.java_jars = java_jars or []
+        self.julia_command = julia_command or []
 
     def serialize(self) -> str:
         return json.dumps(self.__dict__)
@@ -63,6 +65,9 @@ class RuntimeEnvContext:
 
             class_path_args = ["-cp", ray_jars + ":" + str(":".join(local_java_jars))]
             passthrough_args = class_path_args + passthrough_args
+        elif language == Language.JULIA:
+            executable = self.julia_command or ["julia", "-e", "using Ray; start_worker()"]
+            executable += ["--"]
         elif sys.platform == "win32":
             executable = []
         else:

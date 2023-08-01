@@ -314,7 +314,11 @@ class RuntimeEnvAgent:
             # TODO(chenk008): Add log about allocated_resource to
             # avoid lint error. That will be moved to cgroup plugin.
             per_job_logger.debug(f"Worker has resource :" f"{allocated_resource}")
-            context = RuntimeEnvContext(env_vars=runtime_env.env_vars())
+            context = RuntimeEnvContext(
+                env_vars=runtime_env.env_vars(),
+                # TODO: use plugin instead of special casing
+                julia_command=runtime_env.julia_command(),
+            )
 
             # Warn about unrecognized fields in the runtime env.
             for name, _ in runtime_env.plugins():
