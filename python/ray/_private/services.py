@@ -1793,6 +1793,7 @@ def build_julia_worker_command(
     raylet_name: str,
     redis_password: str,
     session_dir: str,
+    log_dir: str,
     node_ip_address: str,
     setup_worker_path: str,
 ):
@@ -1813,7 +1814,7 @@ def build_julia_worker_command(
     """
 
     # TODO: --project, --startup-file=no, --banner=no, ...?
-     command = [
+    command = [
         sys.executable,
         setup_worker_path,
         DEFAULT_WORKER_EXECUTABLE,
