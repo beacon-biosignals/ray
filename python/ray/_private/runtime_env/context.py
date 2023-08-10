@@ -25,6 +25,7 @@ class RuntimeEnvContext:
         resources_dir: Optional[str] = None,
         container: Dict[str, Any] = None,
         java_jars: List[str] = None,
+        julia_executable: Option[str] = None,
     ):
         self.command_prefix = command_prefix or []
         self.env_vars = env_vars or {}
@@ -36,6 +37,7 @@ class RuntimeEnvContext:
         self.resources_dir: str = resources_dir
         self.container = container or {}
         self.java_jars = java_jars or []
+        self.julia_executable = julia_executable or "julia --project"
 
     def serialize(self) -> str:
         return json.dumps(self.__dict__)
@@ -62,14 +64,18 @@ class RuntimeEnvContext:
 
             class_path_args = ["-cp", ray_jars + ":" + str(":".join(local_java_jars))]
             passthrough_args = class_path_args + passthrough_args
+            passthrough_args = [s.replace(" ", r"\ ") for s in passthrough_args]
         elif language == Language.JULIA:
-            executable = "julia"
+            executable = f"exec {self.julia_executable}"  # includes --project specification
+            julia_args = ["-e", "'using ray_core_worker_julia_jll; ray_core_worker_julia_jll.start_worker()'"]
+            passthrough_args = julia_args + ["--"] + passthrough_args
         elif sys.platform == "win32":
             executable = ""
+            passthrough_args = [s.replace(" ", r"\ ") for s in passthrough_args]
         else:
             executable = "exec "
+            passthrough_args = [s.replace(" ", r"\ ") for s in passthrough_args]
 
-        passthrough_args = [s.replace(" ", r"\ ") for s in passthrough_args]
         exec_command = " ".join([f"{executable}"] + passthrough_args)
         command_str = " ".join(self.command_prefix + [exec_command])
         # TODO(SongGuyang): We add this env to command for macOS because it doesn't
