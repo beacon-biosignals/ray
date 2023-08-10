@@ -42,9 +42,13 @@ class RuntimeEnvContext:
 
     @staticmethod
     def deserialize(json_string):
+        # TODO(Beacon): remove these when we're done
+        logger.debug(f"deserialize: {json.loads(json_string)}")
         return RuntimeEnvContext(**json.loads(json_string))
 
     def exec_worker(self, passthrough_args: List[str], language: Language):
+        # TODO(Beacon): remove these when we're done      
+        logger.debug(f"Worker context env: {self.env_vars}")
         update_envs(self.env_vars)
 
         if language == Language.PYTHON and sys.platform == "win32":
@@ -62,6 +66,16 @@ class RuntimeEnvContext:
 
             class_path_args = ["-cp", ray_jars + ":" + str(":".join(local_java_jars))]
             passthrough_args = class_path_args + passthrough_args
+        elif language == Language.JULIA:
+            executable = "julia"
+            args = [
+                "-e", "'using ray_core_worker_julia_jll; start_worker()'",
+                "--"
+            ]
+            # TODO(omus): required to avoid escaping the Julia code. Ideally
+            # this information would be passed in via the serialized runtime
+            # context.
+            executable = " ".join([executable] + args)
         elif sys.platform == "win32":
             executable = ""
         else:
