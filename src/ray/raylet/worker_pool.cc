@@ -284,7 +284,6 @@ WorkerPool::BuildProcessCommandArgs(const Language &language,
                       std::to_string(runtime_env_hash));
   }
 
-  // TODO: Append user-defined per-job options for JULIA here??
 
   // Append user-defined per-process options here
   options.insert(options.end(), dynamic_options.begin(), dynamic_options.end());
