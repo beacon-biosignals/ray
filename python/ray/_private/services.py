@@ -1543,7 +1543,7 @@ def start_raylet(
     has_julia_command = False
     if shutil.which("julia") is not None:
         has_julia_command = True
-    
+
     if has_julia_command is True:
         julia_worker_command = build_julia_worker_command(
             gcs_address,
