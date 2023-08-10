@@ -833,7 +833,7 @@ Status WorkerPool::RegisterDriver(const std::shared_ptr<WorkerInterface> &driver
 
   if (driver->GetLanguage() == Language::JAVA) {
     send_reply_callback(Status::OK(), port);
-  } else if (driver->GetLanguage() == Language::JULIA) { // TODO check what send_reply_callback does
+  } else if (driver->GetLanguage() == Language::JULIA) {
     send_reply_callback(Status::OK(), port);
   } else {
     if (!first_job_registered_ && RayConfig::instance().prestart_worker_first_driver() &&
