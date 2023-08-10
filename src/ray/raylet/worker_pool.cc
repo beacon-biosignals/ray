@@ -831,8 +831,7 @@ Status WorkerPool::RegisterDriver(const std::shared_ptr<WorkerInterface> &driver
   const auto job_id = driver->GetAssignedJobId();
   HandleJobStarted(job_id, job_config);
 
-  // TODO do we want to support PrestartWorkers in Julia? Might cut down on runtime overhead...
-  if (driver->GetLanguage() == Language::JAVA || driver->GetLanguage() == Language::JULIA) {
+  if (driver->GetLanguage() == Language::JAVA) {
     send_reply_callback(Status::OK(), port);
   } else if (driver->GetLanguage() == Language::JULIA) { // TODO check what send_reply_callback does
     send_reply_callback(Status::OK(), port);
