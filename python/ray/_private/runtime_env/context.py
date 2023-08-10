@@ -25,7 +25,7 @@ class RuntimeEnvContext:
         resources_dir: Optional[str] = None,
         container: Dict[str, Any] = None,
         java_jars: List[str] = None,
-        julia_executable: Option[str] = None,
+        julia_executable: Optional[str] = None,
     ):
         self.command_prefix = command_prefix or []
         self.env_vars = env_vars or {}
