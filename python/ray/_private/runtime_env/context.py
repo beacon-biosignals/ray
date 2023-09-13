@@ -23,6 +23,7 @@ class RuntimeEnvContext:
         env_vars: Dict[str, str] = None,
         py_executable: Optional[str] = None,
         executable: Optional[str] = None,
+        args: List[str] = None,
         resources_dir: Optional[str] = None,
         container: Dict[str, Any] = None,
         java_jars: List[str] = None,
@@ -31,6 +32,7 @@ class RuntimeEnvContext:
         self.env_vars = env_vars or {}
         # TODO(omus): deprecate `py_executable` in favor of `executable`
         self.executable = executable or py_executable or None
+        self.args = args or []
         # TODO(edoakes): this should not be in the context but just passed to
         # the per-resource manager constructor. However, it's currently used in
         # the legacy Ray client codepath to pass the resources dir to the shim
@@ -49,7 +51,7 @@ class RuntimeEnvContext:
         return RuntimeEnvContext(**json.loads(json_string))
 
     def exec_worker(self, passthrough_args: List[str], language: Language):
-        # TODO(Beacon): remove these when we're done      
+        # TODO(Beacon): remove these when we're done
         logger.debug(f"Worker context env: {self.env_vars}")
         update_envs(self.env_vars)
 
@@ -70,13 +72,9 @@ class RuntimeEnvContext:
             passthrough_args = class_path_args + passthrough_args
         elif language == Language.JULIA:
             executable = self.executable or "julia"
-            args = [
-                "-e", "'using Ray; start_worker()'",
-                "--"
-            ]
-            # TODO(omus): required to avoid escaping the Julia code. Ideally
-            # this information would be passed in via the serialized runtime
-            # context.
+            args = self.args or ["-e", "'using Ray; start_worker()'"]
+            args += ["--"]
+            # TODO(omus): required to avoid bash interpreting Julia code.
             executable = " ".join([executable] + args)
         elif sys.platform == "win32":
             executable = ""
