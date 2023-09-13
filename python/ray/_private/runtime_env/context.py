@@ -74,6 +74,7 @@ class RuntimeEnvContext:
             executable = self.executable or "julia"
             args = self.args or ["-e", "'using Ray; start_worker()'"]
             args += ["--"]
+            args = [f"'{s}'" if " " in s else s for s in args]
             # TODO(omus): required to avoid bash interpreting Julia code.
             executable = " ".join([executable] + args)
         elif sys.platform == "win32":
@@ -81,6 +82,8 @@ class RuntimeEnvContext:
         else:
             executable = "exec "
 
+        # TODO(omus): arguments in the `command_str` should be escaped to avoid
+        # any bash interpretation
         passthrough_args = [s.replace(" ", r"\ ") for s in passthrough_args]
         exec_command = " ".join([f"{executable}"] + passthrough_args)
         command_str = " ".join(self.command_prefix + [exec_command])

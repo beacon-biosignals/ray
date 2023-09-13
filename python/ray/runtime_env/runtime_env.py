@@ -254,6 +254,8 @@ class RuntimeEnv(dict):
         "container",
         "excludes",
         "env_vars",
+        "executable",
+        "args",
         "_ray_release",
         "_ray_commit",
         "_inject_current_ray",
@@ -281,6 +283,8 @@ class RuntimeEnv(dict):
         conda: Optional[Union[Dict[str, str], str]] = None,
         container: Optional[Dict[str, str]] = None,
         env_vars: Optional[Dict[str, str]] = None,
+        executable: Optional[str] = None,
+        args: Optional[List[str]] = None,
         worker_setup_hook: Optional[Union[Callable, str]] = None,
         config: Optional[Union[Dict, RuntimeEnvConfig]] = None,
         _validate: bool = True,
@@ -301,6 +305,10 @@ class RuntimeEnv(dict):
             runtime_env["container"] = container
         if env_vars is not None:
             runtime_env["env_vars"] = env_vars
+        if executable is not None:
+            runtime_env["executable"] = executable
+        if args is not None:
+            runtime_env["args"] = args
         if config is not None:
             runtime_env["config"] = config
         if worker_setup_hook is not None:
@@ -437,6 +445,14 @@ class RuntimeEnv(dict):
     def java_jars(self) -> List[str]:
         if "java_jars" in self:
             return list(self["java_jars"])
+        return []
+
+    def executable(self) -> str:
+        return self.get("executable", "")
+
+    def args(self) -> List[str]:
+        if "args" in self:
+            return list(self["args"])
         return []
 
     def env_vars(self) -> Dict:
