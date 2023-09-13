@@ -22,13 +22,15 @@ class RuntimeEnvContext:
         command_prefix: List[str] = None,
         env_vars: Dict[str, str] = None,
         py_executable: Optional[str] = None,
+        executable: Optional[str] = None,
         resources_dir: Optional[str] = None,
         container: Dict[str, Any] = None,
         java_jars: List[str] = None,
     ):
         self.command_prefix = command_prefix or []
         self.env_vars = env_vars or {}
-        self.py_executable = py_executable or sys.executable
+        # TODO(omus): deprecate `py_executable` in favor of `executable`
+        self.executable = executable or py_executable or None
         # TODO(edoakes): this should not be in the context but just passed to
         # the per-resource manager constructor. However, it's currently used in
         # the legacy Ray client codepath to pass the resources dir to the shim
@@ -51,10 +53,10 @@ class RuntimeEnvContext:
         logger.debug(f"Worker context env: {self.env_vars}")
         update_envs(self.env_vars)
 
-        if language == Language.PYTHON and sys.platform == "win32":
-            executable = self.py_executable
-        elif language == Language.PYTHON:
-            executable = f"exec {self.py_executable}"
+        if language == Language.PYTHON:
+            executable = self.executable or sys.executable
+            if sys.platform == "win32":
+                executable = f"exec {executable}"
         elif language == Language.JAVA:
             executable = "java"
             ray_jars = os.path.join(get_ray_jars_dir(), "*")
@@ -67,7 +69,7 @@ class RuntimeEnvContext:
             class_path_args = ["-cp", ray_jars + ":" + str(":".join(local_java_jars))]
             passthrough_args = class_path_args + passthrough_args
         elif language == Language.JULIA:
-            executable = "julia"
+            executable = self.executable or "julia"
             args = [
                 "-e", "'using Ray; start_worker()'",
                 "--"
