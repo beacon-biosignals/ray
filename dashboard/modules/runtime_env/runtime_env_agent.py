@@ -289,9 +289,8 @@ class RuntimeEnvAgent(
             # avoid lint error. That will be moved to cgroup plugin.
             per_job_logger.debug(f"Worker has resource :" f"{allocated_resource}")
             context = RuntimeEnvContext(
-                executable=runtime_env.executable(),
-                args=runtime_env.args(),
                 env_vars=runtime_env.env_vars(),
+                command=runtime_env.command(),
             )
             await self._container_manager.setup(
                 runtime_env, context, logger=per_job_logger

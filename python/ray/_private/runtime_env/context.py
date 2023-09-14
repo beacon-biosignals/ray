@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import shlex
 import subprocess
 import sys
 from typing import Any, Dict, List, Optional
@@ -22,8 +23,7 @@ class RuntimeEnvContext:
         command_prefix: List[str] = None,
         env_vars: Dict[str, str] = None,
         py_executable: Optional[str] = None,
-        executable: Optional[str] = None,
-        args: List[str] = None,
+        command: List[str] = None,
         resources_dir: Optional[str] = None,
         container: Dict[str, Any] = None,
         java_jars: List[str] = None,
@@ -31,8 +31,12 @@ class RuntimeEnvContext:
         self.command_prefix = command_prefix or []
         self.env_vars = env_vars or {}
         # TODO(omus): deprecate `py_executable` in favor of `executable`
-        self.executable = executable or py_executable or None
-        self.args = args or []
+        if command:
+            self.command = command
+        elif py_executable:
+            self.command = [py_executable]
+        else:
+            self.command = []
         # TODO(edoakes): this should not be in the context but just passed to
         # the per-resource manager constructor. However, it's currently used in
         # the legacy Ray client codepath to pass the resources dir to the shim
@@ -56,11 +60,11 @@ class RuntimeEnvContext:
         update_envs(self.env_vars)
 
         if language == Language.PYTHON:
-            executable = self.executable or sys.executable
+            command = self.command or [sys.executable]
             if sys.platform == "win32":
-                executable = f"exec {executable}"
+                command = ["exec"] + command
         elif language == Language.JAVA:
-            executable = "java"
+            command = ["java"]
             ray_jars = os.path.join(get_ray_jars_dir(), "*")
 
             local_java_jars = []
@@ -71,22 +75,15 @@ class RuntimeEnvContext:
             class_path_args = ["-cp", ray_jars + ":" + str(":".join(local_java_jars))]
             passthrough_args = class_path_args + passthrough_args
         elif language == Language.JULIA:
-            executable = self.executable or "julia"
-            args = self.args or ["-e", "using Ray; start_worker()"]
-            args += ["--"]
-            args = [f"'{s}'" if " " in s else s for s in args]
-            # TODO(omus): required to avoid bash interpreting Julia code.
-            executable = " ".join([executable] + args)
+            command = self.command or ["julia", "-e", "using Ray; start_worker()"]
+            command += ["--"]
         elif sys.platform == "win32":
-            executable = ""
+            command = [""]
         else:
-            executable = "exec "
+            command = ["exec"]
 
-        # TODO(omus): arguments in the `command_str` should be escaped to avoid
-        # any bash interpretation
-        passthrough_args = [s.replace(" ", r"\ ") for s in passthrough_args]
-        exec_command = " ".join([f"{executable}"] + passthrough_args)
-        command_str = " ".join(self.command_prefix + [exec_command])
+        command = self.command_prefix + command + passthrough_args
+        command_str = shlex.join(command)
         # TODO(SongGuyang): We add this env to command for macOS because it doesn't
         # work for the C++ process of `os.execvp`. We should find a better way to
         # fix it.
@@ -101,8 +98,7 @@ class RuntimeEnvContext:
             )
         logger.debug(f"Exec'ing worker with command: {command_str}")
         if sys.platform == "win32":
-            cmd = [*self.command_prefix, executable, *passthrough_args]
-            subprocess.Popen(cmd, shell=True).wait()
+            subprocess.Popen(command, shell=True).wait()
         else:
             # PyCharm will monkey patch the os.execvp at
             # .pycharm_helpers/pydev/_pydev_bundle/pydev_monkey.py
