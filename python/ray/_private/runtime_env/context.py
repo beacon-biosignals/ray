@@ -72,7 +72,7 @@ class RuntimeEnvContext:
             passthrough_args = class_path_args + passthrough_args
         elif language == Language.JULIA:
             executable = self.executable or "julia"
-            args = self.args or ["-e", "'using Ray; start_worker()'"]
+            args = self.args or ["-e", "using Ray; start_worker()"]
             args += ["--"]
             args = [f"'{s}'" if " " in s else s for s in args]
             # TODO(omus): required to avoid bash interpreting Julia code.
