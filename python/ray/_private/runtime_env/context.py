@@ -23,20 +23,14 @@ class RuntimeEnvContext:
         command_prefix: List[str] = None,
         env_vars: Dict[str, str] = None,
         py_executable: Optional[str] = None,
-        command: List[str] = None,
         resources_dir: Optional[str] = None,
         container: Dict[str, Any] = None,
         java_jars: List[str] = None,
+        julia_command: List[str] = None,
     ):
         self.command_prefix = command_prefix or []
         self.env_vars = env_vars or {}
-        # TODO(omus): deprecate `py_executable` in favor of `executable`
-        if command:
-            self.command = command
-        elif py_executable:
-            self.command = [py_executable]
-        else:
-            self.command = []
+        self.py_executable = py_executable or sys.executable
         # TODO(edoakes): this should not be in the context but just passed to
         # the per-resource manager constructor. However, it's currently used in
         # the legacy Ray client codepath to pass the resources dir to the shim
@@ -44,6 +38,7 @@ class RuntimeEnvContext:
         self.resources_dir: str = resources_dir
         self.container = container or {}
         self.java_jars = java_jars or []
+        self.julia_command = julia_command or []
 
     def serialize(self) -> str:
         return json.dumps(self.__dict__)
@@ -59,10 +54,10 @@ class RuntimeEnvContext:
         logger.debug(f"Worker context env: {self.env_vars}")
         update_envs(self.env_vars)
 
-        if language == Language.PYTHON:
-            command = self.command or [sys.executable]
-            if sys.platform == "win32":
-                command = ["exec"] + command
+        if language == Language.PYTHON and sys.platform == "win32":
+            command = [self.py_executable]
+        elif language == Language.PYTHON:
+            command = ["exec", self.py_executable]
         elif language == Language.JAVA:
             command = ["java"]
             ray_jars = os.path.join(get_ray_jars_dir(), "*")
@@ -75,7 +70,7 @@ class RuntimeEnvContext:
             class_path_args = ["-cp", ray_jars + ":" + str(":".join(local_java_jars))]
             passthrough_args = class_path_args + passthrough_args
         elif language == Language.JULIA:
-            command = self.command or ["julia", "-e", "using Ray; start_worker()"]
+            command = self.julia_command or ["julia", "-e", "using Ray; start_worker()"]
             command += ["--"]
         elif sys.platform == "win32":
             command = [""]

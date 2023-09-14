@@ -254,7 +254,7 @@ class RuntimeEnv(dict):
         "container",
         "excludes",
         "env_vars",
-        "command",
+        "julia_command",
         "_ray_release",
         "_ray_commit",
         "_inject_current_ray",
@@ -282,7 +282,6 @@ class RuntimeEnv(dict):
         conda: Optional[Union[Dict[str, str], str]] = None,
         container: Optional[Dict[str, str]] = None,
         env_vars: Optional[Dict[str, str]] = None,
-        command: Optional[List[str]] = None,
         worker_setup_hook: Optional[Union[Callable, str]] = None,
         config: Optional[Union[Dict, RuntimeEnvConfig]] = None,
         _validate: bool = True,
@@ -303,8 +302,6 @@ class RuntimeEnv(dict):
             runtime_env["container"] = container
         if env_vars is not None:
             runtime_env["env_vars"] = env_vars
-        if command is not None:
-            runtime_env["command"] = command
         if config is not None:
             runtime_env["config"] = config
         if worker_setup_hook is not None:
@@ -312,6 +309,8 @@ class RuntimeEnv(dict):
 
         if runtime_env.get("java_jars"):
             runtime_env["java_jars"] = runtime_env.get("java_jars")
+        if runtime_env.get("julia_command"):
+            runtime_env["julia_command"] = runtime_env.get("julia_command")
 
         self.update(runtime_env)
 
@@ -446,9 +445,9 @@ class RuntimeEnv(dict):
     def env_vars(self) -> Dict:
         return self.get("env_vars", {})
 
-    def command(self) -> List[str]:
-        if "command" in self:
-            return list(self["command"])
+    def julia_command(self) -> List[str]:
+        if "julia_command" in self:
+            return list(self["julia_command"])
         return []
 
     def has_conda(self) -> str:
