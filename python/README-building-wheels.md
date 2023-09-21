@@ -21,9 +21,11 @@ docker run -e BUILDKITE="false" -e TRAVIS_COMMIT="test" --rm -w /ray -v `pwd`:/r
 The wheel files will be placed in the .whl directory.
 
 ## Building MacOS wheels
-Running the MacOS command locally you must first`brew install` `npm` (9.8.1), `nvm` (0.39.5),`miniconda` (23.5.2), and `python@3.8`-`python@3.10`.
 
-Run the contents of this if-block first (or delete the conditional check):
+Before unning the MacOS script you must first `brew install` `npm` (9.8.1), `nvm` (0.39.5),`miniconda` (23.5.2), and `python@3.8`-`python@3.10`.
+Note: The current version of Ray has separate scripts for `macos` and `macos-arm64`. These are consolidated in a later version.
+
+If buliding on `macos-64` then you must run the contents of this if-block first (or delete the conditional check):
 ```
 if [[ -n "${SKIP_DEP_RES}" ]]; then
   ./ci/env/install-bazel.sh
