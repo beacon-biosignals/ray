@@ -44,7 +44,7 @@ To build wheels for MacOS, run the following inside the root directory (i.e.,
 one level above this python directory).
 
 ```
-./python/build-wheel-macos.sh
+sudo BUILDKITE="false" ./python/build-wheel-macos-arm64.sh
 ```
 
 The script uses `sudo` multiple times, so you may need to type in a password.
