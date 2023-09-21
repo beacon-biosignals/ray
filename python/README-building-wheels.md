@@ -21,6 +21,7 @@ docker run -e BUILDKITE="false" -e TRAVIS_COMMIT="test" --rm -w /ray -v `pwd`:/r
 The wheel files will be placed in the .whl directory.
 
 ## Building MacOS wheels
+Running the MacOS command locally you must first`brew install` `npm` (9.8.1), `nvm` (0.39.5),`miniconda` (23.5.2), and `python@3.8`-`python@3.10`.
 
 Run the contents of this if-block first (or delete the conditional check):
 ```
